@@ -1,4 +1,5 @@
 from django.db import models
+from execution.models import Job
 
 # Model for AccountManager
 class AccountManager(models.Model):
@@ -108,32 +109,6 @@ class AccountManagerService(models.Model):
         return f'{self.f_accm_id} - {self.f_servp_id}'
 
 
-# Model for Job
-class Job(models.Model):
-    JOB_TYPE_CHOICES = [
-        ('regular', 'Regular'),
-        ('wafer_run', 'Wafer Run'),
-    ]
-    STATE_CHOICES = [
-        ('created', 'Created'),
-        ('active', 'Active'),
-        ('completed', 'Completed'),
-    ]
-
-    job_id = models.AutoField(primary_key=True)
-    job_name = models.CharField(max_length=200)
-    state = models.CharField(max_length=100, choices=STATE_CHOICES)
-    job_type = models.CharField(max_length=20, choices=JOB_TYPE_CHOICES)
-    starting_date = models.DateField()
-    end_date = models.DateField()
-    completion_time = models.FloatField(help_text="Time in days which were spent to complete the job.")
-
-    class Meta:
-        db_table = 'Job'
-
-    def __str__(self):
-        return self.job_name
-    
 
     # Model for ServiceOrder
 class ServiceOrder(models.Model):
