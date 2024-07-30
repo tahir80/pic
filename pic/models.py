@@ -14,7 +14,6 @@ class User(AbstractUser):
     )
 
     user_type = models.PositiveSmallIntegerField(choices=USER_TYPE_CHOICES, default=1)
-    name = models.CharField(max_length=255)
     email = models.EmailField(blank=True, null=True)
     phone = models.CharField(max_length=255, blank=True, null=True)  
 
