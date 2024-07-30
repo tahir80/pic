@@ -1,5 +1,5 @@
 from django.db import models
-from execution.models import Job
+from pic.execution.models import Job
 from django.contrib.auth.models import AbstractUser
 from django.conf import settings
 from django.db.models.signals import post_save
@@ -13,7 +13,10 @@ class User(AbstractUser):
         (3, 'ServiceProvider'),
     )
 
-    user_type = models.PositiveSmallIntegerField(choices=USER_TYPE_CHOICES)
+    user_type = models.PositiveSmallIntegerField(choices=USER_TYPE_CHOICES, default=1)
+    name = models.CharField(max_length=255)
+    email = models.EmailField(blank=True, null=True)
+    phone = models.CharField(max_length=255, blank=True, null=True)  
 
     def __str__(self):
         return self.username
@@ -24,7 +27,7 @@ class User(AbstractUser):
 # Model for AccountManager
 class AccountManager(models.Model):
     am_id = models.AutoField(primary_key=True)
-    user = models.OneToOneField(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, limit_choices_to={'user_type': 1})
+    user = models.OneToOneField(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, limit_choices_to={'user_type': 1}, default=1)
     name = models.CharField(max_length=255)
     phone = models.CharField(max_length=255, blank=True, null=True)
     email = models.EmailField(blank=True, null=True)
@@ -39,7 +42,7 @@ class AccountManager(models.Model):
 # Model for Customer
 class Customer(models.Model):
     cus_id = models.AutoField(primary_key=True)
-    user = models.OneToOneField(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, limit_choices_to={'user_type': 2})
+    user = models.OneToOneField(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, limit_choices_to={'user_type': 2}, default=2)
 
     name = models.CharField(max_length=255)
     phone = models.CharField(max_length=255)
@@ -67,8 +70,10 @@ class Status(models.Model):
 # Model for ServiceProvider
 class ServiceProvider(models.Model):
     sp_id = models.AutoField(primary_key=True)
-    user = models.OneToOneField(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, limit_choices_to={'user_type': 3})
+    user = models.OneToOneField(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, limit_choices_to={'user_type': 3}, default=3)
     name = models.CharField(max_length=255)
+    phone = models.CharField(max_length=255)
+    email = models.EmailField()
 
     class Meta:
         db_table = 'Service_Provider'
