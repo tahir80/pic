@@ -11,16 +11,16 @@ from pic.models import User, AccountManager, Customer, ServiceProvider, Status, 
 
 class UserAdmin(BaseUserAdmin):
     model = User
-    list_display = ('username', 'user_type', 'email', 'phone') 
+    list_display = ('username', 'user_type', 'email') 
 
     fieldsets = (
-        (None, {'fields': ('username', 'password', 'user_type', 'email', 'phone')}),
+        (None, {'fields': ('username', 'password', 'user_type', 'email')}),
         ('Personal info', {'fields': ('first_name', 'last_name')}),
         ('Permissions', {'fields': ('is_active', 'is_staff', 'is_superuser')}),
         ('Important dates', {'fields': ('last_login', 'date_joined')}),
     )
     add_fieldsets = (
-        (None, {'classes': ('wide',), 'fields': ('username', 'user_type', 'password1', 'password2', 'email', 'phone')}),
+        (None, {'classes': ('wide',), 'fields': ('username', 'user_type', 'password1', 'password2', 'email')}),
     )
 
 admin.site.register(User, UserAdmin)

@@ -15,7 +15,6 @@ class User(AbstractUser):
 
     user_type = models.PositiveSmallIntegerField(choices=USER_TYPE_CHOICES, default=1)
     email = models.EmailField(blank=True, null=True)
-    phone = models.CharField(max_length=255, blank=True, null=True)  
 
     def __str__(self):
         return self.username
