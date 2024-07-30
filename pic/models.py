@@ -1,9 +1,30 @@
 from django.db import models
 from execution.models import Job
+from django.contrib.auth.models import AbstractUser
+from django.conf import settings
+from django.db.models.signals import post_save
+from django.dispatch import receiver
+
+
+class User(AbstractUser):
+    USER_TYPE_CHOICES = (
+        (1, 'AccountManager'),
+        (2, 'Customer'),
+        (3, 'ServiceProvider'),
+    )
+
+    user_type = models.PositiveSmallIntegerField(choices=USER_TYPE_CHOICES)
+
+    def __str__(self):
+        return self.username
+
+
+
 
 # Model for AccountManager
 class AccountManager(models.Model):
     am_id = models.AutoField(primary_key=True)
+    user = models.OneToOneField(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, limit_choices_to={'user_type': 1})
     name = models.CharField(max_length=255)
     phone = models.CharField(max_length=255, blank=True, null=True)
     email = models.EmailField(blank=True, null=True)
@@ -18,6 +39,8 @@ class AccountManager(models.Model):
 # Model for Customer
 class Customer(models.Model):
     cus_id = models.AutoField(primary_key=True)
+    user = models.OneToOneField(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, limit_choices_to={'user_type': 2})
+
     name = models.CharField(max_length=255)
     phone = models.CharField(max_length=255)
     email = models.EmailField()
@@ -44,6 +67,7 @@ class Status(models.Model):
 # Model for ServiceProvider
 class ServiceProvider(models.Model):
     sp_id = models.AutoField(primary_key=True)
+    user = models.OneToOneField(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, limit_choices_to={'user_type': 3})
     name = models.CharField(max_length=255)
 
     class Meta:
@@ -124,3 +148,15 @@ class ServiceOrder(models.Model):
 
     def __str__(self):
         return f'Service Order {self.so_id}'
+
+
+
+@receiver(post_save, sender=User)
+def create_role_specific_profile(sender, instance, created, **kwargs):
+    if created:
+        if instance.user_type == 1:  # Account Manager
+            AccountManager.objects.create(user=instance)
+        elif instance.user_type == 2:  # Customer
+            Customer.objects.create(user=instance)
+        elif instance.user_type == 3:  # Service Provider
+            ServiceProvider.objects.create(user=instance)
