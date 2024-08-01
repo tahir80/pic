@@ -3,10 +3,12 @@ from pic.execution.models import Job
 # Register your models here.
 from django.contrib import admin
 from pic.stat_analysis.models.report import Report
-from pic.stat_analysis.models.statistics import JobReportResult, OrderReportResult
+from pic.stat_analysis.models.statistics import JobReportResult, OrderReportResult, JobStatistics
+from pic.stat_analysis.stat_utils import calculate_job_stats
+from django.http import HttpResponse
 from django.contrib.auth.admin import UserAdmin as BaseUserAdmin
 from pic.models import User, AccountManager, Customer, ServiceProvider, \
-    AccountManagerCustomer, Service, Order, AccountManagerService, ServiceOrder
+    AccountManagerCustomer, Service, Order, AccountManagerService, ServiceOrder, UserStatistics
 from django import forms
 
 
@@ -360,6 +362,7 @@ class OrderForm(forms.ModelForm):
             print(f'Customer ID: {customer.cus_id}, Username: {customer.user.username}, Email: {customer.user.email}, Phone: {customer.user.phone}')
 
 class OrderAdmin(admin.ModelAdmin):
+    print("order form")
     form = OrderForm
     list_display = ('order_id', 'date', 'get_customer_info')
 
@@ -374,7 +377,54 @@ admin.site.register(Order, OrderAdmin)
 
 admin.site.register(Job)
 admin.site.register(Report)
-admin.site.register(JobReportResult)
+
+class JobReportResultForm(forms.ModelForm):
+    class Meta:
+        model = JobReportResult
+        fields = ['report', 'total_jobs']
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        # Add any custom form initialization here if needed
+
+
+
+@admin.register(JobReportResult)
+class JobReportResultAdmin(admin.ModelAdmin):
+    list_display = ('report', 'total_jobs_display')
+
+    def total_jobs_display(self, obj):
+        print("Entering total_jobs_display method") 
+        """Display total jobs directly."""
+        # Use default values or static values for testing
+        quarter_from = 'Q1'
+        year_from = 2020
+        quarter_to = 'Q2'
+        year_to = 2024
+
+        print(f"Admin method 'total_jobs_display' called for object: {obj}")
+
+        # Log the parameters being used for the calculation
+        print(f"Calculating job stats with:")
+        print(f"  Quarter From: {quarter_from}")
+        print(f"  Year From: {year_from}")
+        print(f"  Quarter To: {quarter_to}")
+        print(f"  Year To: {year_to}")
+
+        # Calculate job stats
+        total_jobs = calculate_job_stats(quarter_from, year_from, quarter_to, year_to)
+
+        # Log the result of the calculation
+        print(f"Total jobs calculated: {total_jobs}")
+
+        # Return the total jobs for display in the admin list view
+        return total_jobs
+
+    total_jobs_display.short_description = 'Total Jobs'
+
+
 admin.site.register(OrderReportResult)
+admin.site.register(UserStatistics)
+admin.site.register(JobStatistics)
 
 

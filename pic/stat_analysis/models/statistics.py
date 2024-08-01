@@ -27,3 +27,13 @@ class OrderReportResult(models.Model):
     total_orders = models.IntegerField()
     total_revenue = models.DecimalField(max_digits=10, decimal_places=2)
     average_order_value = models.DecimalField(max_digits=10, decimal_places=2)
+
+
+class JobStatistics(models.Model):
+    """Model to store detailed job statistics."""
+
+    report = models.OneToOneField(Report, on_delete=models.CASCADE)
+
+    # Average completion time for different job types
+    average_job_completion_time_per_job = models.FloatField()
+    number_of_jobs_per_status = models.FloatField()
