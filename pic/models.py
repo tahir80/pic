@@ -61,6 +61,11 @@ class Customer(models.Model):
 
 # Model for Status
 # class Status(models.Model):
+
+#      STATUS_TYPES = [
+#         ('pending', 'Pending'),
+#         ('Shipped', 'Wafer Run'),
+#     ]
 #     status_id = models.AutoField(primary_key=True)
 #     status = models.CharField(max_length=255)
 
