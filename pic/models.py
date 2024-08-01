@@ -15,10 +15,13 @@ class User(AbstractUser):
 
     user_type = models.PositiveSmallIntegerField(choices=USER_TYPE_CHOICES, default=1)
     email = models.EmailField(blank=True, null=True)
-    phone = models.CharField(max_length=255, blank=True, null=True)  
+    phone = models.CharField(max_length=255, blank=True, null=True)
 
     def __str__(self):
         return self.username
+    
+    class Meta:
+        verbose_name_plural = "PIC's Users"
 
 
 
@@ -33,6 +36,7 @@ class AccountManager(models.Model):
 
     class Meta:
         db_table = 'AccountManager'
+        verbose_name_plural = "Account Managers list"
 
     def __str__(self):
         return self.name
@@ -41,7 +45,7 @@ class AccountManager(models.Model):
 # Model for Customer
 class Customer(models.Model):
     cus_id = models.AutoField(primary_key=True)
-    user = models.OneToOneField(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, limit_choices_to={'user_type': 2}, default=2)
+    user = models.OneToOneField(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, limit_choices_to={'user_type': 2})
 
     name = models.CharField(max_length=255)
     phone = models.CharField(max_length=255)
@@ -49,33 +53,35 @@ class Customer(models.Model):
 
     class Meta:
         db_table = 'Customer'
+        verbose_name_plural = "Customers list"
 
     def __str__(self):
         return self.name
 
 
 # Model for Status
-class Status(models.Model):
-    status_id = models.AutoField(primary_key=True)
-    status = models.CharField(max_length=255)
+# class Status(models.Model):
+#     status_id = models.AutoField(primary_key=True)
+#     status = models.CharField(max_length=255)
 
-    class Meta:
-        db_table = 'Status'
+#     class Meta:
+#         db_table = 'Status'
 
-    def __str__(self):
-        return self.status
+#     def __str__(self):
+#         return self.status
 
 
 # Model for ServiceProvider
 class ServiceProvider(models.Model):
     sp_id = models.AutoField(primary_key=True)
-    user = models.OneToOneField(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, limit_choices_to={'user_type': 3}, default=3)
+    user = models.OneToOneField(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, limit_choices_to={'user_type': 3})
     name = models.CharField(max_length=255)
     phone = models.CharField(max_length=255)
     email = models.EmailField()
 
     class Meta:
         db_table = 'Service_Provider'
+        verbose_name_plural = "Sevice Providers list"
 
     def __str__(self):
         return self.name
@@ -113,7 +119,7 @@ class Order(models.Model):
     order_id = models.AutoField(primary_key=True)
     date = models.DateField()
     f_cust_id = models.ForeignKey(Customer, on_delete=models.CASCADE, db_column='F_cust_ID')
-    f_status_id = models.ForeignKey(Status, on_delete=models.CASCADE, db_column='F_Status_ID')
+    # f_status_id = models.ForeignKey(Status, on_delete=models.CASCADE, db_column='F_Status_ID')
 
     class Meta:
         db_table = 'Order'
