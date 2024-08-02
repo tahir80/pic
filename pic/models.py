@@ -157,6 +157,7 @@ class ServiceOrder(models.Model):
     f_service_id = models.ForeignKey(Service, on_delete=models.CASCADE, db_column='F_service_ID')
     f_amc_id = models.ForeignKey(AccountManagerCustomer, on_delete=models.CASCADE, db_column='F_AMC_ID')
     f_job_id = models.ForeignKey(Job, on_delete=models.CASCADE, db_column='F_job_ID')
+    price = models.DecimalField(max_digits=10, decimal_places=2, default=0.0)
 
     class Meta:
         db_table = 'Service_Order'
