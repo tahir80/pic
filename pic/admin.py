@@ -7,8 +7,7 @@ from pic.stat_analysis.models.statistics import JobReportResult, OrderReportResu
 from pic.stat_analysis.stat_utils import calculate_job_stats
 from django.http import HttpResponse
 from django.contrib.auth.admin import UserAdmin as BaseUserAdmin
-from pic.models import User, AccountManager, Customer, ServiceProvider, \
-    AccountManagerCustomer, Service, Order, AccountManagerService, ServiceOrder, UserStatistics
+from pic.models import User, AccountManager, Customer, ServiceProvider, AccountManagerCustomer, Service, Order, AccountManagerService, ServiceOrder, UserStatistics
 from django import forms
 
 
@@ -255,7 +254,7 @@ admin.site.register(AccountManagerService, AccountManagerServiceAdmin)
 class ServiceOrderForm(forms.ModelForm):
     class Meta:
         model = ServiceOrder
-        fields = ['f_order_id', 'f_sp_id', 'f_service_id', 'f_amc_id', 'f_job_id']
+        fields = ['f_order_id', 'f_sp_id', 'f_service_id', 'f_amc_id', 'f_job_id', 'price']
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -306,7 +305,7 @@ class ServiceOrderForm(forms.ModelForm):
 
 class ServiceOrderAdmin(admin.ModelAdmin):
     form = ServiceOrderForm
-    list_display = ('f_order_id', 'get_sp_name', 'get_service_name', 'get_amc_info', 'get_job_info')
+    list_display = ('f_order_id', 'get_sp_name', 'get_service_name', 'get_amc_info', 'get_job_info', 'get_price')
 
     def get_sp_name(self, obj):
         return f'ID: {obj.f_sp_id.sp_id}, Name: {obj.f_sp_id.name} - Email: {obj.f_sp_id.user.email}' if obj.f_sp_id else 'No Service Provider'
@@ -333,6 +332,11 @@ class ServiceOrderAdmin(admin.ModelAdmin):
     def get_job_info(self, obj):
         return f'Job ID: {obj.f_job_id.job_id}, Name: {obj.f_job_id.job_name}' if obj.f_job_id else 'No Job'
     get_job_info.short_description = 'Job Info'
+
+
+    def get_price(self, obj):
+        return f'${obj.price:.2f}' if obj.price else 'No Price'
+    get_price.short_description = 'Price'
 
 admin.site.register(ServiceOrder, ServiceOrderAdmin)
 
@@ -451,19 +455,115 @@ admin.site.register(Job, JobAdmin)
 #     total_jobs_display.short_description = 'Total Jobs'
 
 
+# @admin.register(JobReportResult)
+# class JobReportResultAdmin(admin.ModelAdmin):
+#     list_display = ('report', 'total_jobs')
+#     list_filter = ('report',)
+
 @admin.register(JobReportResult)
 class JobReportResultAdmin(admin.ModelAdmin):
-    list_display = ('report', 'total_jobs')
-    list_filter = ('report',)
+    # Define the fields to be displayed in the list view
+    list_display = (
+        'report_title', 
+        'total_jobs', 
+        'total_jobs_display'
+    )
+    
+    # Define the filters available in the admin interface
+    list_filter = (
+        'report',  # Filter by the report associated with the result
+    )
+    
+    # Add search functionality
+    search_fields = ('report__title',)  # Allows searching by report title
 
+    # Add ordering to the list view
+    ordering = ('-total_jobs',)  # Order by total jobs in descending order
+
+    # Custom method to display the report title
+    def report_title(self, obj):
+        return obj.report.title if obj.report else 'No Report'
+    report_title.short_description = 'Report Title'
+
+    # Custom method to display the total jobs with formatting
+    def total_jobs_display(self, obj):
+        return f'{obj.total_jobs:,}'  # Formats the total jobs with commas
+    total_jobs_display.short_description = 'Total Jobs'
+
+    # Optional: Add fieldsets for better organization on the detail view
+    fieldsets = (
+        (None, {
+            'fields': ('report', 'total_jobs')
+        }),
+    )
 @admin.register(Report)
 class ReportAdmin(admin.ModelAdmin):
     list_display = ('title', 'quarter_from', 'year_from', 'quarter_to', 'year_to', 'created_at')
     list_filter = ('quarter_from', 'year_from', 'quarter_to', 'year_to')
 
 
-admin.site.register(OrderReportResult)
+# admin.site.register(OrderReportResult)
+
+class OrderReportResultForm(forms.ModelForm):
+    class Meta:
+        model = OrderReportResult
+        fields = ['report', 'total_orders', 'total_revenue', 'average_order_value']
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+       
+
+
+class OrderReportResultAdmin(admin.ModelAdmin):
+    # Optionally use a custom form
+    form = OrderReportResultForm
+
+    # Fields to display in the list view
+    list_display = ('report', 'total_orders', 'total_revenue', 'average_order_value')
+
+    # Add filters if needed (e.g., filter by `report`)
+    list_filter = ('report',)
+
+    # Add search functionality (if needed, though it may not be necessary for integer and decimal fields)
+    search_fields = ('report__title',)  # Searching by related report's title
+
+    # Optional: Add ordering to the list view
+    ordering = ('-total_revenue',)
+
+    # Optional: Add custom methods if needed
+    def total_orders_display(self, obj):
+        return obj.total_orders
+    total_orders_display.short_description = 'Total Orders'
+
+    def total_revenue_display(self, obj):
+        return f'${obj.total_revenue:.2f}'
+    total_revenue_display.short_description = 'Total Revenue'
+
+    def average_order_value_display(self, obj):
+        return f'${obj.average_order_value:.2f}'
+    average_order_value_display.short_description = 'Average Order Value'
+
+admin.site.register(OrderReportResult, OrderReportResultAdmin)
+
+
+
 admin.site.register(UserStatistics)
-admin.site.register(JobStatistics)
+
+
+
+@admin.register(JobStatistics)
+class JobStatisticsAdmin(admin.ModelAdmin):
+    list_display = ('report', 'average_job_completion_time_per_job_type_display', 'number_of_jobs_per_status_display')
+
+    def average_job_completion_time_per_job_type_display(self, obj):
+        return obj.average_job_completion_time_per_job_type
+
+    def number_of_jobs_per_status_display(self, obj):
+        return obj.number_of_jobs_per_status
+
+    average_job_completion_time_per_job_type_display.short_description = 'Average Job Completion Time by Type'
+    number_of_jobs_per_status_display.short_description = 'Number of Jobs by Status'
+
+# admin.site.register(JobStatistics)
 
 

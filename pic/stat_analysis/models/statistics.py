@@ -34,6 +34,9 @@ class JobStatistics(models.Model):
 
     report = models.OneToOneField(Report, on_delete=models.CASCADE)
 
-    # Average completion time for different job types
-    average_job_completion_time_per_job = models.FloatField()
-    number_of_jobs_per_status = models.FloatField()
+
+    average_job_completion_time_per_job_type = models.JSONField(default=dict)
+    number_of_jobs_per_status = models.JSONField(default=dict)
+
+    def __str__(self):
+        return f"Job Statistics for {self.report}"
