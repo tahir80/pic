@@ -5,7 +5,10 @@ from django.core.management.base import BaseCommand
 from django.apps import apps
 from pic.execution.models import Job
 from pic.stat_analysis.models import JobReportResult, Report
-from pic.stat_analysis.models.statistics import JobStatistics
+# 
+# from pic.stat_analysis.models.statistics import JobStatistics
+from pic.stat_analysis.models.statistics import JobCompletionTime, JobStatusCount
+
 import datetime
 from django.db.models import Avg, Count
 
@@ -37,11 +40,10 @@ class Command(BaseCommand):
             return
 
         # Calculate job stats and detailed statistics
-        job_stats = self.calculate_job_stats(quarter_from, year_from, quarter_to, year_to, user)
-        detailed_stats = self.calculate_detailed_statistics(quarter_from, year_from, quarter_to, year_to)
+        report = self.calculate_job_stats(quarter_from, year_from, quarter_to, year_to, user)
+        self.calculate_detailed_statistics(report, quarter_from, year_from, quarter_to, year_to)
 
-        self.stdout.write(self.style.SUCCESS(f'Job stats calculated: {job_stats.total_jobs} jobs'))
-        self.stdout.write(self.style.SUCCESS(f'Detailed statistics calculated and saved.'))
+        self.stdout.write(self.style.SUCCESS(f'Statistics calculated and saved.'))
 
     def calculate_job_stats(self, quarter_from, year_from, quarter_to, year_to, user):
         start_date_from, end_date_from = self.get_quarter_dates(quarter_from, year_from)
@@ -76,9 +78,9 @@ class Command(BaseCommand):
             job_stats.total_jobs = total_jobs
             job_stats.save()
 
-        return job_stats
+        return report
 
-    def calculate_detailed_statistics(self, quarter_from, year_from, quarter_to, year_to):
+    def calculate_detailed_statistics(self, report, quarter_from, year_from, quarter_to, year_to):
         start_date_from, end_date_from = self.get_quarter_dates(quarter_from, year_from)
         start_date_to, end_date_to = self.get_quarter_dates(quarter_to, year_to)
 
@@ -93,9 +95,12 @@ class Command(BaseCommand):
             avg_completion_time=Avg('completion_time')
         ).order_by()
 
-        avg_completion_time_dict = {
-            item['job_type']: item['avg_completion_time'] for item in avg_completion_time_per_job_type
-        }
+        for item in avg_completion_time_per_job_type:
+            JobCompletionTime.objects.update_or_create(
+                report=report,
+                job_type=item['job_type'],
+                defaults={'average_completion_time': item['avg_completion_time']}
+            )
 
         # Calculate number of jobs per status
         num_jobs_per_status = Job.objects.filter(
@@ -105,32 +110,12 @@ class Command(BaseCommand):
             num_jobs=Count('id')
         ).order_by()
 
-        num_jobs_dict = {
-            item['state']: item['num_jobs'] for item in num_jobs_per_status
-        }
-
-        # Create or update JobStatistics
-        report = Report.objects.get(
-            quarter_from=quarter_from,
-            year_from=year_from,
-            quarter_to=quarter_to,
-            year_to=year_to
-        )
-
-        job_stats, created = JobStatistics.objects.get_or_create(
-            report=report,
-            defaults={
-                'average_job_completion_time_per_job_type': avg_completion_time_dict,
-                'number_of_jobs_per_status': num_jobs_dict,
-            }
-        )
-
-        if not created:
-            job_stats.average_job_completion_time_per_job_type = avg_completion_time_dict
-            job_stats.number_of_jobs_per_status = num_jobs_dict
-            job_stats.save()
-
-        return job_stats
+        for item in num_jobs_per_status:
+            JobStatusCount.objects.update_or_create(
+                report=report,
+                status=item['state'],
+                defaults={'count': item['num_jobs']}
+            )
 
     def get_quarter_dates(self, quarter, year):
         if quarter == 'Q1':

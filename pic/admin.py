@@ -3,7 +3,8 @@ from pic.execution.models import Job
 # Register your models here.
 from django.contrib import admin
 from pic.stat_analysis.models.report import Report
-from pic.stat_analysis.models.statistics import JobReportResult, OrderReportResult, JobStatistics
+# from pic.stat_analysis.models.statistics import JobReportResult, OrderReportResult, JobStatistics
+from pic.stat_analysis.models.statistics import JobReportResult, OrderReportResult, JobStatusCount, JobCompletionTime
 from pic.stat_analysis.stat_utils import calculate_job_stats
 from django.http import HttpResponse
 from django.contrib.auth.admin import UserAdmin as BaseUserAdmin
@@ -510,146 +511,245 @@ admin.site.register(OrderReportResult, OrderReportResultAdmin)
 
 
 
-# admin.site.register(UserStatistics)
 
+class JobCompletionTimeInline(admin.TabularInline):
+    model = JobCompletionTime
+    extra = 1
+    fields = ('job_type', 'average_completion_time')
+    readonly_fields = ('average_completion_time',)
 
-
-@admin.register(JobStatistics)
-class JobStatisticsAdmin(admin.ModelAdmin):
-    list_display = ('report', 'average_job_completion_time_per_job_type_display', 'number_of_jobs_per_status_display')
-
-    def average_job_completion_time_per_job_type_display(self, obj):
-        return obj.average_job_completion_time_per_job_type
-
-    def number_of_jobs_per_status_display(self, obj):
-        return obj.number_of_jobs_per_status
-
-    average_job_completion_time_per_job_type_display.short_description = 'Average Job Completion Time by Type'
-    number_of_jobs_per_status_display.short_description = 'Number of Jobs by Status'
-
-# admin.site.register(JobStatistics)
-
-
-
+class JobStatusCountInline(admin.TabularInline):
+    model = JobStatusCount
+    extra = 1
+    fields = ('status', 'count')
+    readonly_fields = ('count',)
 
 class JobReportResultInline(admin.StackedInline):
     model = JobReportResult
     extra = 1
+    fields = ('total_jobs',)
+    readonly_fields = ('total_jobs',)
 
 class OrderReportResultInline(admin.StackedInline):
     model = OrderReportResult
     extra = 1
-
-class JobStatisticsInline(admin.StackedInline):
-    model = JobStatistics
-    extra = 1
+    fields = ('total_orders', 'total_revenue', 'average_order_value')
+    readonly_fields = ('total_revenue', 'average_order_value')
 
 class ReportAdmin(admin.ModelAdmin):
-    inlines = [JobReportResultInline, OrderReportResultInline, JobStatisticsInline]
-
+    inlines = [
+        JobCompletionTimeInline,
+        JobStatusCountInline,
+        JobReportResultInline,
+        OrderReportResultInline,
+    ]
+    
     list_display = (
         'title', 'created_at', 'created_by',
-        'quarter_from', 'year_from', 'quarter_to',
-        'year_to', 'get_total_jobs', 'get_total_orders',
-        'get_total_revenue', 'get_average_order_value',
-        'get_avg_completion_time_regular',
-        'get_avg_completion_time_wafer_run',
-        'get_num_jobs_created',
-        'get_num_jobs_active',
-        'get_num_jobs_completed'
+        'quarter_from', 'year_from', 'quarter_to', 'year_to',
+        'total_jobs', 'total_orders', 'total_revenue', 'average_order_value',
+        'average_completion_time_regular', 'average_completion_time_wafer_run',
+        'jobs_created', 'jobs_active', 'jobs_completed'
     )
 
-    list_filter = (
-        'created_by',
-        'quarter_from',
-        'year_from',
-        'quarter_to',
-        'year_to',
-    )
+    def total_jobs(self, obj):
+        return obj.jobreportresult.total_jobs if hasattr(obj, 'jobreportresult') else 'N/A'
+    total_jobs.admin_order_field = 'jobreportresult__total_jobs'
 
-    search_fields = (
-        'title',
-        'created_by__username',
-        'quarter_from',
-        'year_from',
-        'quarter_to',
-        'year_to'
-    )
+    def total_orders(self, obj):
+        return obj.orderreportresult.total_orders if hasattr(obj, 'orderreportresult') else 'N/A'
+    total_orders.admin_order_field = 'orderreportresult__total_orders'
 
-    def get_service_order_job_ids(self, obj):
-        """Helper method to get job IDs related to the service orders."""
-        return ServiceOrder.objects.values_list('f_job_id', flat=True).distinct()
+    def total_revenue(self, obj):
+        return obj.orderreportresult.total_revenue if hasattr(obj, 'orderreportresult') else 'N/A'
+    total_revenue.admin_order_field = 'orderreportresult__total_revenue'
 
-    def get_service_order_order_ids(self, obj):
-        """Helper method to get order IDs related to the service orders."""
-        return ServiceOrder.objects.values_list('f_order_id', flat=True).distinct()
+    def average_order_value(self, obj):
+        return obj.orderreportresult.average_order_value if hasattr(obj, 'orderreportresult') else 'N/A'
+    average_order_value.admin_order_field = 'orderreportresult__average_order_value'
 
-    def get_total_jobs(self, obj):
-        """Total number of jobs related to the service orders."""
-        job_ids = self.get_service_order_job_ids(obj)
-        return Job.objects.filter(id__in=job_ids).count()
-    get_total_jobs.short_description = 'Total Jobs'
+    def average_completion_time_regular(self, obj):
+        try:
+            return obj.jobcompletiontime_set.get(job_type='regular').average_completion_time
+        except JobCompletionTime.DoesNotExist:
+            return 'N/A'
+    average_completion_time_regular.admin_order_field = 'jobcompletiontime__average_completion_time'
 
-    def get_total_orders(self, obj):
-        """Total number of orders related to the service orders."""
-        order_ids = self.get_service_order_order_ids(obj)
-        return Order.objects.filter(order_id__in=order_ids).count()
-    get_total_orders.short_description = 'Total Orders'
+    def average_completion_time_wafer_run(self, obj):
+        try:
+            return obj.jobcompletiontime_set.get(job_type='wafer_run').average_completion_time
+        except JobCompletionTime.DoesNotExist:
+            return 'N/A'
+    average_completion_time_wafer_run.admin_order_field = 'jobcompletiontime__average_completion_time'
 
-    def get_total_revenue(self, obj):
-        """Total revenue from service orders."""
-        return ServiceOrder.objects.aggregate(total_revenue=Sum('price'))['total_revenue'] or 0
-    get_total_revenue.short_description = 'Total Revenue'
+    def jobs_created(self, obj):
+        try:
+            return obj.jobstatuscount_set.get(status='created').count
+        except JobStatusCount.DoesNotExist:
+            return 'N/A'
+    jobs_created.admin_order_field = 'jobstatuscount__count'
 
-    def get_average_order_value(self, obj):
-        """Average order value."""
-        total_orders = self.get_total_orders(obj)
-        total_revenue = self.get_total_revenue(obj)
-        return total_revenue / total_orders if total_orders > 0 else 0
-    get_average_order_value.short_description = 'Average Order Value'
+    def jobs_active(self, obj):
+        try:
+            return obj.jobstatuscount_set.get(status='active').count
+        except JobStatusCount.DoesNotExist:
+            return 'N/A'
+    jobs_active.admin_order_field = 'jobstatuscount__count'
 
-    def get_avg_completion_time(self, obj, job_type):
-        """Average completion time for jobs of a specific type."""
-        job_ids = self.get_service_order_job_ids(obj)
-        return Job.objects.filter(
-            id__in=job_ids,
-            job_type=job_type
-        ).aggregate(avg_completion_time=Avg('completion_time'))['avg_completion_time'] or 0
+    def jobs_completed(self, obj):
+        try:
+            return obj.jobstatuscount_set.get(status='completed').count
+        except JobStatusCount.DoesNotExist:
+            return 'N/A'
+    jobs_completed.admin_order_field = 'jobstatuscount__count'
 
-    def get_avg_completion_time_regular(self, obj):
-        """Average completion time for regular jobs."""
-        return self.get_avg_completion_time(obj, 'regular')
-    get_avg_completion_time_regular.short_description = 'Avg Completion Time (Regular)'
-
-    def get_avg_completion_time_wafer_run(self, obj):
-        """Average completion time for wafer run jobs."""
-        return self.get_avg_completion_time(obj, 'wafer_run')
-    get_avg_completion_time_wafer_run.short_description = 'Avg Completion Time (Wafer Run)'
-
-    def get_num_jobs_by_state(self, obj, state):
-        """Number of jobs with a specific state."""
-        job_ids = self.get_service_order_job_ids(obj)
-        return Job.objects.filter(
-            id__in=job_ids,
-            state=state
-        ).count()
-
-    def get_num_jobs_created(self, obj):
-        """Number of jobs with state 'created'."""
-        return self.get_num_jobs_by_state(obj, 'created')
-    get_num_jobs_created.short_description = 'Jobs Created'
-
-    def get_num_jobs_active(self, obj):
-        """Number of jobs with state 'active'."""
-        return self.get_num_jobs_by_state(obj, 'active')
-    get_num_jobs_active.short_description = 'Jobs Active'
-
-    def get_num_jobs_completed(self, obj):
-        """Number of jobs with state 'completed'."""
-        return self.get_num_jobs_by_state(obj, 'completed')
-    get_num_jobs_completed.short_description = 'Jobs Completed'
+    search_fields = ('title', 'created_by__username')
+    list_filter = ('created_by', 'quarter_from', 'year_from', 'quarter_to', 'year_to')
 
 admin.site.register(Report, ReportAdmin)
+
+
+
+# admin.site.register(UserStatistics)
+
+
+
+# @admin.register(JobStatistics)
+# class JobStatisticsAdmin(admin.ModelAdmin):
+#     list_display = ('report', 'average_job_completion_time_per_job_type_display', 'number_of_jobs_per_status_display')
+
+#     def average_job_completion_time_per_job_type_display(self, obj):
+#         return obj.average_job_completion_time_per_job_type
+
+#     def number_of_jobs_per_status_display(self, obj):
+#         return obj.number_of_jobs_per_status
+
+#     average_job_completion_time_per_job_type_display.short_description = 'Average Job Completion Time by Type'
+#     number_of_jobs_per_status_display.short_description = 'Number of Jobs by Status'
+
+# # admin.site.register(JobStatistics)
+
+
+
+
+# class JobReportResultInline(admin.StackedInline):
+#     model = JobReportResult
+#     extra = 1
+
+# class OrderReportResultInline(admin.StackedInline):
+#     model = OrderReportResult
+#     extra = 1
+
+# class JobStatisticsInline(admin.StackedInline):
+#     model = JobStatistics
+#     extra = 1
+
+# class ReportAdmin(admin.ModelAdmin):
+#     inlines = [JobReportResultInline, OrderReportResultInline, JobStatisticsInline]
+
+#     list_display = (
+#         'title', 'created_at', 'created_by',
+#         'quarter_from', 'year_from', 'quarter_to',
+#         'year_to', 'get_total_jobs', 'get_total_orders',
+#         'get_total_revenue', 'get_average_order_value',
+#         'get_avg_completion_time_regular',
+#         'get_avg_completion_time_wafer_run',
+#         'get_num_jobs_created',
+#         'get_num_jobs_active',
+#         'get_num_jobs_completed'
+#     )
+
+#     list_filter = (
+#         'created_by',
+#         'quarter_from',
+#         'year_from',
+#         'quarter_to',
+#         'year_to',
+#     )
+
+#     search_fields = (
+#         'title',
+#         'created_by__username',
+#         'quarter_from',
+#         'year_from',
+#         'quarter_to',
+#         'year_to'
+#     )
+
+#     def get_service_order_job_ids(self, obj):
+#         """Helper method to get job IDs related to the service orders."""
+#         return ServiceOrder.objects.values_list('f_job_id', flat=True).distinct()
+
+#     def get_service_order_order_ids(self, obj):
+#         """Helper method to get order IDs related to the service orders."""
+#         return ServiceOrder.objects.values_list('f_order_id', flat=True).distinct()
+
+#     def get_total_jobs(self, obj):
+#         """Total number of jobs related to the service orders."""
+#         job_ids = self.get_service_order_job_ids(obj)
+#         return Job.objects.filter(id__in=job_ids).count()
+#     get_total_jobs.short_description = 'Total Jobs'
+
+#     def get_total_orders(self, obj):
+#         """Total number of orders related to the service orders."""
+#         order_ids = self.get_service_order_order_ids(obj)
+#         return Order.objects.filter(order_id__in=order_ids).count()
+#     get_total_orders.short_description = 'Total Orders'
+
+#     def get_total_revenue(self, obj):
+#         """Total revenue from service orders."""
+#         return ServiceOrder.objects.aggregate(total_revenue=Sum('price'))['total_revenue'] or 0
+#     get_total_revenue.short_description = 'Total Revenue'
+
+#     def get_average_order_value(self, obj):
+#         """Average order value."""
+#         total_orders = self.get_total_orders(obj)
+#         total_revenue = self.get_total_revenue(obj)
+#         return total_revenue / total_orders if total_orders > 0 else 0
+#     get_average_order_value.short_description = 'Average Order Value'
+
+#     def get_avg_completion_time(self, obj, job_type):
+#         """Average completion time for jobs of a specific type."""
+#         job_ids = self.get_service_order_job_ids(obj)
+#         return Job.objects.filter(
+#             id__in=job_ids,
+#             job_type=job_type
+#         ).aggregate(avg_completion_time=Avg('completion_time'))['avg_completion_time'] or 0
+
+#     def get_avg_completion_time_regular(self, obj):
+#         """Average completion time for regular jobs."""
+#         return self.get_avg_completion_time(obj, 'regular')
+#     get_avg_completion_time_regular.short_description = 'Avg Completion Time (Regular)'
+
+#     def get_avg_completion_time_wafer_run(self, obj):
+#         """Average completion time for wafer run jobs."""
+#         return self.get_avg_completion_time(obj, 'wafer_run')
+#     get_avg_completion_time_wafer_run.short_description = 'Avg Completion Time (Wafer Run)'
+
+#     def get_num_jobs_by_state(self, obj, state):
+#         """Number of jobs with a specific state."""
+#         job_ids = self.get_service_order_job_ids(obj)
+#         return Job.objects.filter(
+#             id__in=job_ids,
+#             state=state
+#         ).count()
+
+#     def get_num_jobs_created(self, obj):
+#         """Number of jobs with state 'created'."""
+#         return self.get_num_jobs_by_state(obj, 'created')
+#     get_num_jobs_created.short_description = 'Jobs Created'
+
+#     def get_num_jobs_active(self, obj):
+#         """Number of jobs with state 'active'."""
+#         return self.get_num_jobs_by_state(obj, 'active')
+#     get_num_jobs_active.short_description = 'Jobs Active'
+
+#     def get_num_jobs_completed(self, obj):
+#         """Number of jobs with state 'completed'."""
+#         return self.get_num_jobs_by_state(obj, 'completed')
+#     get_num_jobs_completed.short_description = 'Jobs Completed'
+
+# admin.site.register(Report, ReportAdmin)
 
 
 
@@ -743,3 +843,16 @@ admin.site.register(Report, ReportAdmin)
 # admin.site.register(Report, ReportAdmin)
 
 
+class JobCompletionTimeAdmin(admin.ModelAdmin):
+    list_display = ('report', 'job_type', 'average_completion_time')
+    list_filter = ('job_type', 'report')
+    search_fields = ('report__title', 'job_type')
+
+class JobStatusCountAdmin(admin.ModelAdmin):
+    list_display = ('report', 'status', 'count')
+    list_filter = ('status', 'report')
+    search_fields = ('report__title', 'status')
+
+# Register the models with the admin site
+admin.site.register(JobCompletionTime, JobCompletionTimeAdmin)
+admin.site.register(JobStatusCount, JobStatusCountAdmin)
