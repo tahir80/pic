@@ -375,52 +375,91 @@ class OrderAdmin(admin.ModelAdmin):
 
 admin.site.register(Order, OrderAdmin)
 
-admin.site.register(Job)
-admin.site.register(Report)
+# admin.site.register(Job)
 
-class JobReportResultForm(forms.ModelForm):
-    class Meta:
-        model = JobReportResult
-        fields = ['report', 'total_jobs']
 
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        # Add any custom form initialization here if needed
+class JobAdmin(admin.ModelAdmin):
+    # Fields to display in the list view
+    list_display = (
+        'job_id', 'job_name', 'state', 'job_type', 'starting_date', 'end_date', 'completion_time'
+    )
 
+    # Add filters for the list view
+    list_filter = ('state', 'job_type', 'starting_date', 'end_date')
+
+    # Add search functionality
+    search_fields = ('job_id', 'job_name')
+
+    # Add ordering to the list view
+    ordering = ('-starting_date',)
+
+    # Add fieldsets for better organization on the detail view
+    fieldsets = (
+        (None, {
+            'fields': ('job_id', 'job_name', 'state', 'job_type')
+        }),
+        ('Dates', {
+            'fields': ('starting_date', 'end_date')
+        }),
+        ('Completion', {
+            'fields': ('completion_time',)
+        }),
+    )
+
+    # Add custom methods if needed
+    def job_duration(self, obj):
+        if obj.starting_date and obj.end_date:
+            return (obj.end_date - obj.starting_date).days
+        return None
+
+    job_duration.short_description = 'Job Duration (days)'
+
+# Register the Job model with the custom admin class
+admin.site.register(Job, JobAdmin)
+
+# admin.site.register(Report)
+
+# class JobReportResultForm(forms.ModelForm):
+#     class Meta:
+#         model = JobReportResult
+#         fields = ['report', 'total_jobs']
+
+#     def __init__(self, *args, **kwargs):
+#         super().__init__(*args, **kwargs)
+#         # Add any custom form initialization here if needed
+
+
+
+# @admin.register(JobReportResult)
+# class JobReportResultAdmin(admin.ModelAdmin):
+#     list_display = ('report', 'total_jobs_display')
+
+#     def change_view(self, request, object_id, form_url='', extra_context=None):
+#         self.current_user = request.user
+#         return super().change_view(request, object_id, form_url, extra_context)
+
+#     def total_jobs_display(self, obj):
+#         if hasattr(self, 'current_user') and self.current_user.is_authenticated:
+#             user_id = self.current_user.id
+#             # Use the user_id to get data or perform actions
+#             # Example usage:
+#             total_jobs = calculate_job_stats('Q1', 2020, 'Q2', 2024, self.current_user)
+#             return total_jobs
+#         else:
+#             return "User not logged in"
+
+#     total_jobs_display.short_description = 'Total Jobs'
 
 
 @admin.register(JobReportResult)
 class JobReportResultAdmin(admin.ModelAdmin):
-    list_display = ('report', 'total_jobs_display')
+    list_display = ('report', 'total_jobs')
+    list_filter = ('report',)
 
-    def total_jobs_display(self, obj):
-        print("Entering total_jobs_display method") 
-        """Display total jobs directly."""
-        # Use default values or static values for testing
-        quarter_from = 'Q1'
-        year_from = 2020
-        quarter_to = 'Q2'
-        year_to = 2024
-
-        print(f"Admin method 'total_jobs_display' called for object: {obj}")
-
-        # Log the parameters being used for the calculation
-        print(f"Calculating job stats with:")
-        print(f"  Quarter From: {quarter_from}")
-        print(f"  Year From: {year_from}")
-        print(f"  Quarter To: {quarter_to}")
-        print(f"  Year To: {year_to}")
-
-        # Calculate job stats
-        total_jobs = calculate_job_stats(quarter_from, year_from, quarter_to, year_to)
-
-        # Log the result of the calculation
-        print(f"Total jobs calculated: {total_jobs}")
-
-        # Return the total jobs for display in the admin list view
-        return total_jobs
-
-    total_jobs_display.short_description = 'Total Jobs'
+@admin.register(Report)
+class ReportAdmin(admin.ModelAdmin):
+    list_display = ('title', 'quarter_from', 'year_from', 'quarter_to', 'year_to', 'created_at')
+    list_filter = ('quarter_from', 'year_from', 'quarter_to', 'year_to')
 
 
 admin.site.register(OrderReportResult)
