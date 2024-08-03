@@ -73,7 +73,7 @@ To execute the script and generate the statistics, use the following command:
 **Important:** To run the script and calculate job statistics, enter the following command in your terminal:
 
 ```bash
-python manage.py get_job_stats Q1 2021 Q2 2023 --username=tahir
+python manage.py get_job_stats Q1 2021 Q2 2023 --username=username
 
 ## Related Models
 
