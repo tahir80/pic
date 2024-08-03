@@ -59,5 +59,10 @@ Requirement 1: Broaden the scope of the statistics related to Jobs. calculate an
 1. average job completion time per job type;
 2. number of jobs per status.
 
+## Solution:
+I implemeted this logic in pic/management/get_job_stats. This script takes user input for the reporting period and username, retrieves and validates the user, and then computes various statistics such as total job counts, average job completion times, and job status counts.
+
+To run this write `python manage.py get_job_stats Q1 2021 Q2 2023 --username=tahir`
+
 
 
