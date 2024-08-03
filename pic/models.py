@@ -191,18 +191,18 @@ class ServiceOrder(models.Model):
 
 
 
-class UserStatistics(models.Model):
-    user = models.OneToOneField(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
-    total_orders = models.IntegerField(default=0)
-    total_services_used = models.IntegerField(default=0)
-    total_jobs_completed = models.IntegerField(default=0)
+# class UserStatistics(models.Model):
+#     user = models.OneToOneField(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
+#     total_orders = models.IntegerField(default=0)
+#     total_services_used = models.IntegerField(default=0)
+#     total_jobs_completed = models.IntegerField(default=0)
 
-    class Meta:
-        db_table = 'UserStatistics'
-        verbose_name_plural = "User Statistics"
+#     class Meta:
+#         db_table = 'UserStatistics'
+#         verbose_name_plural = "User Statistics"
 
-    def __str__(self):
-        return f'Statistics for {self.user.username}'
+#     def __str__(self):
+#         return f'Statistics for {self.user.username}'
     
 
     

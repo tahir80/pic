@@ -8,7 +8,7 @@ from pic.stat_analysis.models.statistics import JobReportResult, OrderReportResu
 from pic.stat_analysis.stat_utils import calculate_job_stats
 from django.http import HttpResponse
 from django.contrib.auth.admin import UserAdmin as BaseUserAdmin
-from pic.models import User, AccountManager, Customer, ServiceProvider, AccountManagerCustomer, Service, Order, AccountManagerService, ServiceOrder, UserStatistics
+from pic.models import User, AccountManager, Customer, ServiceProvider, AccountManagerCustomer, Service, Order, AccountManagerService, ServiceOrder
 from django import forms
 
 from django.db.models import Avg, Count, Sum

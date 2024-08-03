@@ -39,6 +39,9 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'pic',
     'django_seed',
+    'django_extensions',
+    'djangoviz',
+    'schema_graph',
 ]
 
 MIDDLEWARE = [
