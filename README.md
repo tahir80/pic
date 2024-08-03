@@ -55,7 +55,7 @@ def save(self, *args, **kwargs):
 ````
 # Task 2: Enhancing Analysis Capabilities, Reporting, and Unit Tests
 
-## Requirement # 1
+## Requirement 1: Enhanced statistics related to Jobs
 
 Expand the job statistics to include:
 1. Average job completion time per job type.
@@ -108,7 +108,7 @@ class JobStatusCount(models.Model):
         return f"{self.status}: {self.count}"
 ```
 
-## Requirement # 2
+## Requirement 2: added scripts for orders
 
 Implement analysis script(s) for statistics related to Orders. Put the scripts in the `stat_utils.py`.
 
@@ -134,7 +134,7 @@ class OrderReportResult(models.Model):
     average_order_value = models.DecimalField(max_digits=10, decimal_places=2)
 ```
 
-## Requirement # 3
+## Requirement 3: Reporting
 Add django admin pages displaying the statistical report data. Focus on the convenience of the data representation, filtering, etc.
 ### Solution
 1. Please visit the admin pages for different reports:
@@ -147,7 +147,9 @@ Add django admin pages displaying the statistical report data. Focus on the conv
     7. **Orders**: http://127.0.0.1:8000/admin/pic/order/
 and more..
 
-## Requirement # 4
+## Requirement 4: PDF report generation
+
+Important: I assumed that I was tasked to create PDF report, however this can be interpreted in many ways "Add a possibility to link a PDF file to reports."
 
 1. Please visit the folloing link: http://127.0.0.1:8000/admin/pic/report/
 2. Select any reports
