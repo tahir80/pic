@@ -1,48 +1,56 @@
 # Task 1: Database Schema in Django
 
-My first task was to create a database schema in models.py that captures the requirements listed in task 1.
+For this task, I designed a database schema in `models.py` to meet the specified requirements. The schema is visualized in the following diagram:
 
-![alt text](https://github.com/tahir80/pic/blob/main/my_project_models_updated.png)
+![Database Schema](https://github.com/tahir80/pic/blob/main/my_project_models_updated.png)
 
+## Requirements and Implementation
 
-### Requirement 1: An account manager registers the new user account for this customer.
+### Requirement 1: Account Management
+**Objective:** An account manager registers new customer accounts.
 
-1. for this requirement to fullfil, I created account manager and customer tables and link it to the User type.
-2. I also created associatitive entity to make sure that account managers are linked with customers (AccountmanagerCustomer)
+**Implementation:**
+- Created `AccountManager` and `Customer` tables.
+- Linked these tables to the `User` model.
+- Added an associative entity `AccountManagerCustomer` to manage the relationships between account managers and customers.
 
-### Requirement 2: The customer creates an order. The complete order is visible to the account manager
+### Requirement 2: Order Creation and Visibility
+**Objective:** Customers create orders, which should be visible to their account managers.
 
-1. I created an Order and ServiceOrder tables to capture this scenario.
+**Implementation:**
+- Implemented `Order` and `ServiceOrder` tables to manage customer orders and associated services.
 
-### Requirement 3: The customer fills the order with services from the service providers. However, there’s a limitation: she can add services only from those service providers which are managed by her account manager.
+### Requirement 3: Service Ordering Constraints
+**Objective:** Customers can only add services from service providers managed by their account manager.
 
-1. I implemented this scenario by ensuring that Acccount managers and Service providers are linked together using AccountmanagerService table.
-2. Seconfly, I implemend logic in the ServiceOrder Table to ensure that only customer who are linked with Account managers can place their orders from the registerd Service providers. Please see details here:
+**Implementation:**
+- Created the `AccountManagerService` table to link account managers with service providers.
+- Added logic to the `ServiceOrder` table to ensure that customers can only place orders with service providers managed by their account manager. The validation logic is as follows:
 
-```python 
+```python
 def clean(self):
-        # Get the account manager, service provider, and customer
-        account_manager = self.f_amc_id.f_am_id  # AccountManager
-        service_provider = self.f_sp_id  # ServiceProvider
-        customer = self.f_amc_id.f_cus_id  # Customer
-        
-        # Check if the AccountManager is linked to the Customer
-        if not AccountManagerCustomer.objects.filter(
-            f_am_id=account_manager,
-            f_cus_id=customer
-        ).exists():
-            raise ValidationError("The account manager is not linked to the customer.")
+    # Retrieve account manager, service provider, and customer
+    account_manager = self.f_amc_id.f_am_id  # AccountManager
+    service_provider = self.f_sp_id  # ServiceProvider
+    customer = self.f_amc_id.f_cus_id  # Customer
+    
+    # Validate that the AccountManager is linked to the Customer
+    if not AccountManagerCustomer.objects.filter(
+        f_am_id=account_manager,
+        f_cus_id=customer
+    ).exists():
+        raise ValidationError("The account manager is not linked to the customer.")
 
-        # Check if the ServiceProvider is managed by the AccountManager
-        if not AccountManagerService.objects.filter(
-            f_accm_id=account_manager,
-            f_servp_id=service_provider
-        ).exists():
-            raise ValidationError("The service provider is not managed by the account manager.")
-    def save(self, *args, **kwargs):
-        self.clean()  # Ensure validation is called
-        super().save(*args, **kwargs)
-```
+    # Validate that the ServiceProvider is managed by the AccountManager
+    if not AccountManagerService.objects.filter(
+        f_accm_id=account_manager,
+        f_servp_id=service_provider
+    ).exists():
+        raise ValidationError("The service provider is not managed by the account manager.")
+    
+def save(self, *args, **kwargs):
+    self.clean()  # Ensure validation is called
+    super().save(*args, **kwargs)
 
 
 
