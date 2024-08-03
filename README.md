@@ -2,6 +2,9 @@
 
 My first task was to create a database schema in models.py that captures the requirements listed in task 1.
 
+![alt text]()
+
+
 ### Requirement 1: An account manager registers the new user account for this customer.
 
 1. for this requirement to fullfil, I created account manager and customer tables and link it to the User type.
