@@ -55,7 +55,7 @@ def save(self, *args, **kwargs):
 ````
 # Task 2: Enhancing Analysis Capabilities, Reporting, and Unit Tests
 
-## Requirement
+## Requirement # 1
 
 Expand the job statistics to include:
 1. Average job completion time per job type.
@@ -72,7 +72,41 @@ To execute the script and generate the statistics, use the following command:
 
 ```bash
 python manage.py get_job_stats Q1 2021 Q2 2023 --username=tahir
+```
+## Related Models
 
+``` python
+class JobCompletionTime(models.Model):
+    report = models.ForeignKey(Report, on_delete=models.CASCADE)
+    job_type = models.CharField(max_length=20, choices=[
+        ('regular', 'Regular'),
+        ('wafer_run', 'Wafer Run'),
+    ])
+    average_completion_time = models.FloatField(help_text="Average completion time in days.")
+
+    class Meta:
+        unique_together = ('report', 'job_type')
+
+    def __str__(self):
+        return f"{self.job_type}: {self.average_completion_time} days"
+
+class JobStatusCount(models.Model):
+    report = models.ForeignKey(Report, on_delete=models.CASCADE)
+    status = models.CharField(max_length=100, choices=[
+        ('created', 'Created'),
+        ('active', 'Active'),
+        ('completed', 'Completed'),
+    ])
+    count = models.IntegerField()
+
+    class Meta:
+        unique_together = ('report', 'status')
+
+    def __str__(self):
+        return f"{self.status}: {self.count}"
+```
+
+## Requirement # 2
 
 
 
