@@ -1,3 +1,12 @@
+
+#################################################################################################
+
+#Very Important Note: I have placed the scripts (for task 2) in the management/commands folder 
+# to facilitate running them via Django management commands.
+
+################################################################################################
+
+
 import datetime
 from pic.execution.models import Job
 from pic.stat_analysis.models.report import Report
