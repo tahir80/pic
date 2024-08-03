@@ -2,7 +2,7 @@
 
 My first task was to create a database schema in models.py that captures the requirements listed in task 1.
 
-![alt text]()
+![alt text](https://github.com/tahir80/pic/blob/main/my_project_models_updated.png)
 
 
 ### Requirement 1: An account manager registers the new user account for this customer.
