@@ -14,6 +14,18 @@ from django import forms
 from django.db.models import Avg, Count, Sum
 
 
+# REPORT LAB
+
+from reportlab.pdfgen import canvas
+from reportlab.lib.units import inch
+from reportlab.lib.pagesizes import letter, landscape
+from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, Paragraph, Spacer
+from reportlab.lib.pagesizes import letter
+from reportlab.lib import colors
+from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
+from io import BytesIO
+
+
 admin.site.site_header = "PICS ADMIN PANEL"
 
 
@@ -536,6 +548,130 @@ class OrderReportResultInline(admin.StackedInline):
     fields = ('total_orders', 'total_revenue', 'average_order_value')
     readonly_fields = ('total_revenue', 'average_order_value')
 
+
+# PDF export function
+def export_to_pdf(modeladmin, request, queryset):
+    buffer = BytesIO()
+
+    # Set up the PDF document with landscape orientation
+    doc = SimpleDocTemplate(
+        buffer,
+        pagesize=landscape(letter),  # Use landscape mode
+        rightMargin=inch*0.75,
+        leftMargin=inch*0.75,
+        topMargin=inch*0.75,
+        bottomMargin=inch*0.75
+    )
+
+    elements = []
+
+    # Prepare header information for each report
+    styles = getSampleStyleSheet()
+    header_style = ParagraphStyle(
+        'HeaderStyle',
+        parent=styles['Normal'],
+        fontSize=10,
+        leading=12,
+        alignment=1,  # Center alignment
+    )
+
+    for report in queryset:
+        # Prepare header information
+        header_info = [
+            f"Created By: {report.created_by.username}",
+            f"Created At: {report.created_at.strftime('%Y-%m-%d %H:%M:%S')}",
+            f"Year From: {report.year_from}",
+            f"Year To: {report.year_to}",
+            f"Quarter From: {report.quarter_from}",
+            f"Quarter To: {report.quarter_to}"
+        ]
+        
+        # Add header information to elements
+        for info in header_info:
+            p = Paragraph(info, header_style)
+            elements.append(p)
+        
+        elements.append(Spacer(1, 12))  # Add some space between the header and the table
+
+        # Prepare data for PDF
+        data = [
+            [Paragraph("Title", header_style), Paragraph("Total Jobs", header_style), 
+             Paragraph("Total Orders", header_style), Paragraph("Total Revenue", header_style),
+             Paragraph("Avg Order Value", header_style), 
+             Paragraph("Avg Comp Time Regular", header_style), 
+             Paragraph("Avg Comp Time Wafer Run", header_style), 
+             Paragraph("Jobs Created", header_style), 
+             Paragraph("Jobs Active", header_style), 
+             Paragraph("Jobs Completed", header_style)]
+        ]
+        
+        for report in queryset:
+            total_jobs = report.jobreportresult.total_jobs if hasattr(report, 'jobreportresult') else 'N/A'
+            total_orders = report.orderreportresult.total_orders if hasattr(report, 'orderreportresult') else 'N/A'
+            total_revenue = report.orderreportresult.total_revenue if hasattr(report, 'orderreportresult') else 'N/A'
+            average_order_value = report.orderreportresult.average_order_value if hasattr(report, 'orderreportresult') else 'N/A'
+            
+            try:
+                average_completion_time_regular = report.jobcompletiontime_set.get(job_type='regular').average_completion_time
+            except JobCompletionTime.DoesNotExist:
+                average_completion_time_regular = 'N/A'
+            
+            try:
+                average_completion_time_wafer_run = report.jobcompletiontime_set.get(job_type='wafer_run').average_completion_time
+            except JobCompletionTime.DoesNotExist:
+                average_completion_time_wafer_run = 'N/A'
+            
+            try:
+                jobs_created = report.jobstatuscount_set.get(status='created').count
+            except JobStatusCount.DoesNotExist:
+                jobs_created = 'N/A'
+            
+            try:
+                jobs_active = report.jobstatuscount_set.get(status='active').count
+            except JobStatusCount.DoesNotExist:
+                jobs_active = 'N/A'
+            
+            try:
+                jobs_completed = report.jobstatuscount_set.get(status='completed').count
+            except JobStatusCount.DoesNotExist:
+                jobs_completed = 'N/A'
+            
+            data.append([
+                report.title, total_jobs, total_orders, total_revenue, average_order_value, 
+                average_completion_time_regular, average_completion_time_wafer_run, 
+                jobs_created, jobs_active, jobs_completed
+            ])
+    
+        # Create and style the table
+        col_widths = [1.1*inch]*len(data[0])  # Adjust column widths as needed
+        table = Table(data, colWidths=col_widths)
+        table.setStyle(TableStyle([
+            ('BACKGROUND', (0, 0), (-1, 0), colors.grey),
+            ('TEXTCOLOR', (0, 0), (-1, 0), colors.whitesmoke),
+            ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
+            ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
+            ('FONTSIZE', (0, 0), (-1, 0), 8),
+            ('FONTNAME', (0, 1), (-1, -1), 'Helvetica'),
+            ('FONTSIZE', (0, 1), (-1, -1), 7),
+            ('BOTTOMPADDING', (0, 0), (-1, 0), 8),
+            ('BACKGROUND', (0, 1), (-1, -1), colors.beige),
+            ('GRID', (0,0), (-1,-1), 0.5, colors.black),
+        ]))
+        elements.append(table)
+        
+        # Add space between each report section if printing multiple
+        elements.append(Spacer(1, 24))
+
+    # Build PDF document
+    doc.build(elements)
+    
+    buffer.seek(0)
+    response = HttpResponse(buffer, content_type='application/pdf')
+    response['Content-Disposition'] = 'attachment; filename="reports.pdf"'
+    return response
+
+export_to_pdf.short_description = "Export selected reports to PDF"
+
 class ReportAdmin(admin.ModelAdmin):
     inlines = [
         JobCompletionTimeInline,
@@ -605,8 +741,80 @@ class ReportAdmin(admin.ModelAdmin):
 
     search_fields = ('title', 'created_by__username')
     list_filter = ('created_by', 'quarter_from', 'year_from', 'quarter_to', 'year_to')
+    actions = [export_to_pdf]
 
 admin.site.register(Report, ReportAdmin)
+# class ReportAdmin(admin.ModelAdmin):
+#     inlines = [
+#         JobCompletionTimeInline,
+#         JobStatusCountInline,
+#         JobReportResultInline,
+#         OrderReportResultInline,
+#     ]
+    
+#     list_display = (
+#         'title', 'created_at', 'created_by',
+#         'quarter_from', 'year_from', 'quarter_to', 'year_to',
+#         'total_jobs', 'total_orders', 'total_revenue', 'average_order_value',
+#         'average_completion_time_regular', 'average_completion_time_wafer_run',
+#         'jobs_created', 'jobs_active', 'jobs_completed'
+#     )
+
+#     def total_jobs(self, obj):
+#         return obj.jobreportresult.total_jobs if hasattr(obj, 'jobreportresult') else 'N/A'
+#     total_jobs.admin_order_field = 'jobreportresult__total_jobs'
+
+#     def total_orders(self, obj):
+#         return obj.orderreportresult.total_orders if hasattr(obj, 'orderreportresult') else 'N/A'
+#     total_orders.admin_order_field = 'orderreportresult__total_orders'
+
+#     def total_revenue(self, obj):
+#         return obj.orderreportresult.total_revenue if hasattr(obj, 'orderreportresult') else 'N/A'
+#     total_revenue.admin_order_field = 'orderreportresult__total_revenue'
+
+#     def average_order_value(self, obj):
+#         return obj.orderreportresult.average_order_value if hasattr(obj, 'orderreportresult') else 'N/A'
+#     average_order_value.admin_order_field = 'orderreportresult__average_order_value'
+
+#     def average_completion_time_regular(self, obj):
+#         try:
+#             return obj.jobcompletiontime_set.get(job_type='regular').average_completion_time
+#         except JobCompletionTime.DoesNotExist:
+#             return 'N/A'
+#     average_completion_time_regular.admin_order_field = 'jobcompletiontime__average_completion_time'
+
+#     def average_completion_time_wafer_run(self, obj):
+#         try:
+#             return obj.jobcompletiontime_set.get(job_type='wafer_run').average_completion_time
+#         except JobCompletionTime.DoesNotExist:
+#             return 'N/A'
+#     average_completion_time_wafer_run.admin_order_field = 'jobcompletiontime__average_completion_time'
+
+#     def jobs_created(self, obj):
+#         try:
+#             return obj.jobstatuscount_set.get(status='created').count
+#         except JobStatusCount.DoesNotExist:
+#             return 'N/A'
+#     jobs_created.admin_order_field = 'jobstatuscount__count'
+
+#     def jobs_active(self, obj):
+#         try:
+#             return obj.jobstatuscount_set.get(status='active').count
+#         except JobStatusCount.DoesNotExist:
+#             return 'N/A'
+#     jobs_active.admin_order_field = 'jobstatuscount__count'
+
+#     def jobs_completed(self, obj):
+#         try:
+#             return obj.jobstatuscount_set.get(status='completed').count
+#         except JobStatusCount.DoesNotExist:
+#             return 'N/A'
+#     jobs_completed.admin_order_field = 'jobstatuscount__count'
+
+#     search_fields = ('title', 'created_by__username')
+#     list_filter = ('created_by', 'quarter_from', 'year_from', 'quarter_to', 'year_to')
+
+# admin.site.register(Report, ReportAdmin)
 
 
 
