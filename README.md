@@ -151,6 +151,6 @@ and more..
 
 Important: I assumed that I was tasked to create PDF report, however this can be interpreted in many ways "Add a possibility to link a PDF file to reports."
 
-1. Please visit the folloing link: http://127.0.0.1:8000/admin/pic/report/
+1. Please visit the following link: http://127.0.0.1:8000/admin/pic/report/
 2. Select any reports
-3. Select "export selcetd reports to PDF" action.
+3. Select "export selected reports to PDF" action.
