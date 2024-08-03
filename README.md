@@ -112,6 +112,7 @@ class JobStatusCount(models.Model):
 
 Implement analysis script(s) for statistics related to Orders. Put the scripts in the `stat_utils.py`.
 
+### Solution
 1. I implemented this logic in pic/management/analyze_orders.py. 
 
 please run this using: ```bash
@@ -132,4 +133,17 @@ class OrderReportResult(models.Model):
     total_revenue = models.DecimalField(max_digits=10, decimal_places=2)
     average_order_value = models.DecimalField(max_digits=10, decimal_places=2)
 ```
+
+## Requirement # 3
+Add django admin pages displaying the statistical report data. Focus on the convenience of the data representation, filtering, etc.
+### Solution
+1. Please visit the admin pages for different reports:
+    1. **Main report** http://127.0.0.1:8000/admin/pic/report/ (for combined report with filters and search)
+    2. **Job completion times**: http://127.0.0.1:8000/admin/pic/jobcompletiontime/
+    3. **Job Report results**: http://127.0.0.1:8000/admin/pic/jobreportresult/
+    4. **Job status count**: http://127.0.0.1:8000/admin/pic/jobstatuscount/
+    5. **Jobs**: http://127.0.0.1:8000/admin/pic/job/
+    6. **Order Report Results**: http://127.0.0.1:8000/admin/pic/orderreportresult/
+    7. **Orders**: http://127.0.0.1:8000/admin/pic/order/
+and more..
 
