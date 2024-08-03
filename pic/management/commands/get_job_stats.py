@@ -1,12 +1,8 @@
-# python manage.py get_job_stats Q1 2021 Q2 2023 --username=<username>
-
 from django.conf import settings
 from django.core.management.base import BaseCommand
 from django.apps import apps
 from pic.execution.models import Job
 from pic.stat_analysis.models import JobReportResult, Report
-# 
-# from pic.stat_analysis.models.statistics import JobStatistics
 from pic.stat_analysis.models.statistics import JobCompletionTime, JobStatusCount
 
 import datetime
@@ -29,21 +25,31 @@ class Command(BaseCommand):
         year_to = options['year_to']
         username = options.get('username', 'system')
 
+        print(f"Handling command with the following parameters:")
+        print(f"  From: {quarter_from} {year_from}")
+        print(f"  To: {quarter_to} {year_to}")
+        print(f"  Username: {username}")
+
         # Import the custom user model
         User = apps.get_model(settings.AUTH_USER_MODEL)
 
         # Fetch the user instance
         try:
             user = User.objects.get(username=username)
+            print(f"User {username} found.")
         except User.DoesNotExist:
             self.stderr.write(self.style.ERROR(f'User with username "{username}" does not exist.'))
+            print(f"User {username} does not exist.")
             return
 
         # Calculate job stats and detailed statistics
+        print("Calculating job statistics...")
         report = self.calculate_job_stats(quarter_from, year_from, quarter_to, year_to, user)
+        print("Calculating detailed statistics...")
         self.calculate_detailed_statistics(report, quarter_from, year_from, quarter_to, year_to)
 
         self.stdout.write(self.style.SUCCESS(f'Statistics calculated and saved.'))
+        print("Statistics calculated and saved.")
 
     def calculate_job_stats(self, quarter_from, year_from, quarter_to, year_to, user):
         start_date_from, end_date_from = self.get_quarter_dates(quarter_from, year_from)
@@ -52,6 +58,7 @@ class Command(BaseCommand):
         start_date = min(start_date_from, start_date_to)
         end_date = max(end_date_from, end_date_to)
 
+        print(f"Calculating total jobs from {start_date} to {end_date}...")
         total_jobs = Job.objects.filter(
             starting_date__gte=start_date,
             end_date__lte=end_date
@@ -69,6 +76,11 @@ class Command(BaseCommand):
             }
         )
 
+        if created:
+            print(f"Created new report: {report}")
+        else:
+            print(f"Report already exists: {report}")
+
         job_stats, created = JobReportResult.objects.get_or_create(
             report=report,
             defaults={'total_jobs': total_jobs}
@@ -77,6 +89,9 @@ class Command(BaseCommand):
         if not created:
             job_stats.total_jobs = total_jobs
             job_stats.save()
+            print(f"Updated job stats: {job_stats}")
+        else:
+            print(f"Created job stats: {job_stats}")
 
         return report
 
@@ -88,6 +103,7 @@ class Command(BaseCommand):
         end_date = max(end_date_from, end_date_to)
 
         # Calculate average completion time per job type
+        print(f"Calculating average completion time from {start_date} to {end_date}...")
         avg_completion_time_per_job_type = Job.objects.filter(
             starting_date__gte=start_date,
             end_date__lte=end_date
@@ -101,8 +117,10 @@ class Command(BaseCommand):
                 job_type=item['job_type'],
                 defaults={'average_completion_time': item['avg_completion_time']}
             )
+            print(f"Updated or created JobCompletionTime for {item['job_type']} with average completion time {item['avg_completion_time']}.")
 
         # Calculate number of jobs per status
+        print(f"Calculating number of jobs per status from {start_date} to {end_date}...")
         num_jobs_per_status = Job.objects.filter(
             starting_date__gte=start_date,
             end_date__lte=end_date
@@ -116,6 +134,7 @@ class Command(BaseCommand):
                 status=item['state'],
                 defaults={'count': item['num_jobs']}
             )
+            print(f"Updated or created JobStatusCount for status {item['state']} with count {item['num_jobs']}.")
 
     def get_quarter_dates(self, quarter, year):
         if quarter == 'Q1':
