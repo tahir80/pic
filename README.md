@@ -147,3 +147,8 @@ Add django admin pages displaying the statistical report data. Focus on the conv
     7. **Orders**: http://127.0.0.1:8000/admin/pic/order/
 and more..
 
+## Requirement # 4
+
+1. Please visit the folloing link: http://127.0.0.1:8000/admin/pic/report/
+2. Select any reports
+3. Select "export selcetd reports to PDF" action.
