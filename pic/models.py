@@ -4,6 +4,7 @@ from django.contrib.auth.models import AbstractUser
 from django.conf import settings
 from django.db.models.signals import post_save
 from django.dispatch import receiver
+from django.core.exceptions import ValidationError
 
 
 class User(AbstractUser):
@@ -162,6 +163,29 @@ class ServiceOrder(models.Model):
     class Meta:
         db_table = 'Service_Order'
 
+    def clean(self):
+        # Get the account manager, service provider, and customer
+        account_manager = self.f_amc_id.f_am_id  # AccountManager
+        service_provider = self.f_sp_id  # ServiceProvider
+        customer = self.f_amc_id.f_cus_id  # Customer
+        
+        # Check if the AccountManager is linked to the Customer
+        if not AccountManagerCustomer.objects.filter(
+            f_am_id=account_manager,
+            f_cus_id=customer
+        ).exists():
+            raise ValidationError("The account manager is not linked to the customer.")
+
+        # Check if the ServiceProvider is managed by the AccountManager
+        if not AccountManagerService.objects.filter(
+            f_accm_id=account_manager,
+            f_servp_id=service_provider
+        ).exists():
+            raise ValidationError("The service provider is not managed by the account manager.")
+    def save(self, *args, **kwargs):
+        self.clean()  # Ensure validation is called
+        super().save(*args, **kwargs)
+
     def __str__(self):
         return f'Service Order {self.so_id}'
 
@@ -183,12 +207,12 @@ class UserStatistics(models.Model):
 
     
 
-@receiver(post_save, sender=User)
-def create_role_specific_profile(sender, instance, created, **kwargs):
-    if created:
-        if instance.user_type == 1:  # Account Manager
-            AccountManager.objects.create(user=instance)
-        elif instance.user_type == 2:  # Customer
-            Customer.objects.create(user=instance)
-        elif instance.user_type == 3:  # Service Provider
-            ServiceProvider.objects.create(user=instance)
+# @receiver(post_save, sender=User)
+# def create_role_specific_profile(sender, instance, created, **kwargs):
+#     if created:
+#         if instance.user_type == 1:  # Account Manager
+#             AccountManager.objects.create(user=instance)
+#         elif instance.user_type == 2:  # Customer
+#             Customer.objects.create(user=instance)
+#         elif instance.user_type == 3:  # Service Provider
+#             ServiceProvider.objects.create(user=instance)
