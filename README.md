@@ -53,16 +53,26 @@ def save(self, *args, **kwargs):
     super().save(*args, **kwargs)
 
 ````
-# Task 2: Enhacning analysis capabilities + Reporting + unit tests
+# Task 2: Enhancing Analysis Capabilities, Reporting, and Unit Tests
 
-Requirement 1: Broaden the scope of the statistics related to Jobs. calculate and store the following:
-1. average job completion time per job type;
-2. number of jobs per status.
+## Requirement
 
-## Solution:
-I implemeted this logic in pic/management/get_job_stats. This script takes user input for the reporting period and username, retrieves and validates the user, and then computes various statistics such as total job counts, average job completion times, and job status counts.
+Expand the job statistics to include:
+1. Average job completion time per job type.
+2. Number of jobs per status.
 
-To run this write `python manage.py get_job_stats Q1 2021 Q2 2023 --username=tahir`
+## Solution
+
+I implemented this functionality in the `pic/management/commands/get_job_stats.py` script. This script calculates and stores job statistics by:
+1. Taking user input for the reporting period and username.
+2. Retrieving and validating the user.
+3. Computing various metrics such as total job counts, average job completion times, and job status counts.
+
+To execute the script and generate the statistics, use the following command:
+
+```bash
+python manage.py get_job_stats Q1 2021 Q2 2023 --username=tahir
+
 
 
 
