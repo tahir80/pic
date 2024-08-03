@@ -1,6 +1,6 @@
 # Task 1: Database Schema in Django
 
-For this task, I designed a database schema in `models.py` to meet the specified requirements. The schema is visualized in the following diagram:
+For this task, I designed a database schema in `models.py` and other folders (stat_analysis, execution) to meet the specified requirements. The schema is visualized in the following diagram:
 
 ![Database Schema](https://github.com/tahir80/pic/blob/main/my_project_models_updated.png)
 
