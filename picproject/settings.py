@@ -40,7 +40,6 @@ INSTALLED_APPS = [
     'pic',
     'django_seed',
     'django_extensions',
-    'djangoviz',
     'schema_graph',
 ]
 
