@@ -70,9 +70,11 @@ I implemented this functionality in the `pic/management/commands/get_job_stats.p
 
 To execute the script and generate the statistics, use the following command:
 
+**Important:** To run the script and calculate job statistics, enter the following command in your terminal:
+
 ```bash
 python manage.py get_job_stats Q1 2021 Q2 2023 --username=tahir
-```
+
 ## Related Models
 
 ``` python
@@ -108,5 +110,26 @@ class JobStatusCount(models.Model):
 
 ## Requirement # 2
 
+Implement analysis script(s) for statistics related to Orders. Put the scripts in the `stat_utils.py`.
 
+1. I implemented this logic in pic/management/analyze_orders.py. 
+
+please run this using: ```bash
+python manage.py analyze_orders <account_manager_username> <customer_username> ```
+
+2. I then stored the results in the following table:
+
+```python
+class OrderReportResult(models.Model):
+    """Model to store analysis results for the customer Orders.
+
+    Note: `Order` model should be defined in Task 1.
+    """
+    report = models.OneToOneField(Report, on_delete=models.CASCADE)
+
+    # Example data fields of what the order report may contain.
+    total_orders = models.IntegerField()
+    total_revenue = models.DecimalField(max_digits=10, decimal_places=2)
+    average_order_value = models.DecimalField(max_digits=10, decimal_places=2)
+```
 
