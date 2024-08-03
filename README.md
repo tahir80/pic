@@ -53,6 +53,8 @@ def save(self, *args, **kwargs):
     super().save(*args, **kwargs)
 
 ````
+
+ - in addition to that, I have creetd unit test 3 (see below for details) to confirm this scenario.
 # Task 2: Enhancing Analysis Capabilities, Reporting, and Unit Tests
 
 ## Requirement 1: Enhanced statistics related to Jobs
@@ -70,10 +72,16 @@ I implemented this functionality in the `pic/management/commands/get_job_stats.p
 
 To execute the script and generate the statistics, use the following command:
 
-**Important:** To run the script and calculate job statistics, enter the following command in your terminal:
+**Important:** Before running the script to calculate job statistics, ensure the following:
+
+1. **User Creation:** Confirm that at least one user (Account Manager, Service Provider, or Customer) has been created in the database.
+2. **User Credentials:** Ensure you know the username of the user who will be used to generate the report.
+
+To run the script and calculate job statistics, enter the following command in your terminal:
 
 ```bash
-python manage.py get_job_stats Q1 2021 Q2 2023 --username=username
+python manage.py get_job_stats <quarter_from> <year_from> <quarter_to> <year_to> --username=username
+```
 
 ## Related Models
 
