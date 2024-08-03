@@ -58,7 +58,7 @@ def save(self, *args, **kwargs):
 # Task 2: Enhancing Analysis Capabilities, Reporting, and Unit Tests
 
 ## Requirement 1: Enhanced statistics related to Jobs
-
+**Task**: 
 Expand the job statistics to include:
 1. Average job completion time per job type.
 2. Number of jobs per status.
@@ -72,10 +72,13 @@ I implemented this functionality in the `pic/management/commands/get_job_stats.p
 
 To execute the script and generate the statistics, use the following command:
 
-**Important:** Before running the script to calculate job statistics, ensure the following:
+**Important:** Before running the script to calculate job statistics, ensure that the user is created and you know the user credentials, such as username.
 
-1. **User Creation:** Confirm that at least one user (Account Manager, Service Provider, or Customer) has been created in the database.
-2. **User Credentials:** Ensure you know the username of the user who will be used to generate the report.
+You can get the usernames from existing database; please head over to `Pic's user` table in the admin panel. Some examples are:
+
+```bash
+python manage.py get_job_stats Q1 2021 Q2 2023 --username=tahir
+```
 
 To run the script and calculate job statistics, enter the following command in your terminal:
 
@@ -118,13 +121,22 @@ class JobStatusCount(models.Model):
 
 ## Requirement 2: added scripts for orders
 
-Implement analysis script(s) for statistics related to Orders. Put the scripts in the `stat_utils.py`.
+**Task**: Implement analysis script(s) for statistics related to Orders. Put the scripts in the `stat_utils.py`.
 
 ### Solution
 1. I implemented this logic in pic/management/analyze_orders.py. 
 
-please run this using: ```bash
-python manage.py analyze_orders <account_manager_username> <customer_username> ```
+please run this using: 
+
+```bash
+python manage.py analyze_orders <account_manager_username> <customer_username> 
+```
+
+A concrete example is:
+
+```bash
+python manage.py analyze_orders tahir customer1
+```
 
 2. I then stored the results in the following table:
 
@@ -143,7 +155,7 @@ class OrderReportResult(models.Model):
 ```
 
 ## Requirement 3: Reporting
-Add django admin pages displaying the statistical report data. Focus on the convenience of the data representation, filtering, etc.
+**Task**: Add django admin pages displaying the statistical report data. Focus on the convenience of the data representation, filtering, etc.
 ### Solution
 1. Please visit the admin pages for different reports:
     1. **Main report** http://127.0.0.1:8000/admin/pic/report/ (for combined report with filters and search)
@@ -156,8 +168,9 @@ Add django admin pages displaying the statistical report data. Focus on the conv
 and more..
 
 ## Requirement 4: PDF report generation
+**Task**: Add a possibility to link a PDF file to reports.
 
-Important: I assumed that I was tasked to create PDF report, however this can be interpreted in many ways "Add a possibility to link a PDF file to reports.".
+**Important**: I assumed that I was tasked to create PDF report, however this can be interpreted in many ways "Add a possibility to link a PDF file to reports.".
 
 Also, I implemented this functionality for the report interface that consolidates reports from other models, such as OrderReportResult, JobCompletionTime etc. Extending this to other interfaces would be straightforward. 
 
