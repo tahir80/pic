@@ -52,9 +52,12 @@ def save(self, *args, **kwargs):
     self.clean()  # Ensure validation is called
     super().save(*args, **kwargs)
 
-
-
+````
 # Task 2: Enhacning analysis capabilities + Reporting + unit tests
+
+Requirement 1: Broaden the scope of the statistics related to Jobs. calculate and store the following:
+1. average job completion time per job type;
+2. number of jobs per status.
 
 
 
