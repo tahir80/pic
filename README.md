@@ -236,4 +236,8 @@ This test ensures that a customer can only place orders with service providers t
 
 ---
 
+**Note**: 
+
+The price column was initially placed in the ``ServiceOrder`` table because we anticipated that the price might vary depending on the order and service type. However, if the price is consistent for each service, it would be more efficient and consistent to store it in the Service table. 
+
 
