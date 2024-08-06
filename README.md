@@ -54,7 +54,7 @@ def save(self, *args, **kwargs):
 
 ````
 
- - in addition to that, I have creetd unit test 3 (see below for details) to confirm this scenario.
+ - in addition to that, I have created unit test 3 (see below for details) to confirm this scenario.
 # Task 2: Enhancing Analysis Capabilities, Reporting, and Unit Tests
 
 ## Requirement 1: Enhanced statistics related to Jobs
