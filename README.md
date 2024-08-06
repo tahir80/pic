@@ -85,9 +85,6 @@ python manage.py get_job_stats <quarter_from> <year_from> <quarter_to> <year_to>
 python manage.py get_job_stats Q1 2021 Q2 2023 --username=tahir
 ```
 
-To run the script and calculate job statistics, enter the following command in your terminal:
-
-
 
 ## Related Models
 
