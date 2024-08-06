@@ -74,17 +74,20 @@ To execute the script and generate the statistics, use the following command:
 
 **Important:** Before running the script to calculate job statistics, ensure that the user is created and you know the user credentials, such as username.
 
-You can get the usernames from existing database; please head over to `Pic's user` table in the admin panel. Some examples are:
+You can get the usernames from existing database; please head over to `Pic's user` table in the admin panel. 
 
+```bash
+python manage.py get_job_stats <quarter_from> <year_from> <quarter_to> <year_to> --username=username
+```
+
+ An Example is: 
 ```bash
 python manage.py get_job_stats Q1 2021 Q2 2023 --username=tahir
 ```
 
 To run the script and calculate job statistics, enter the following command in your terminal:
 
-```bash
-python manage.py get_job_stats <quarter_from> <year_from> <quarter_to> <year_to> --username=username
-```
+
 
 ## Related Models
 
