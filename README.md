@@ -6,8 +6,8 @@ For this task, I designed a database schema in `models.py` and other folders (st
 
 ## Installation
 > **Note:** If you want to use the superuser account, please user the following credentials.
-> UserName: tahir
-> Password: admin
+```UserName: tahir```
+``` Password: admin ```
 
 ## Requirements and Implementation
 
