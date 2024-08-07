@@ -4,6 +4,11 @@ For this task, I designed a database schema in `models.py` and other folders (st
 
 ![Database Schema](https://github.com/tahir80/pic/blob/main/my_project_models_updated.png)
 
+## Installations
+> **Note:** If you want to use superuser account, please user the following credentials.
+> UserName: tahir
+> Password: admin
+
 ## Requirements and Implementation
 
 ### Requirement 1: Account Management
